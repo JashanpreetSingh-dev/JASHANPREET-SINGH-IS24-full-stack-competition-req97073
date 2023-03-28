@@ -3,6 +3,23 @@ const app = express();
 const port = 3000;
 const Joi = require('joi');
 const fs = require('fs');
+const swaggerJSDoc = require('swagger-jsdoc');
+const swaggerUI = require('swagger-ui-express');
+
+const options = {
+    definition: {
+        openapi: '3.0.0',
+        info: {
+            title: 'Product API',
+            version: '1.0.0',
+        },
+    },
+    apis: ['./server.js'],
+}
+
+const specs = swaggerJSDoc(options);
+
+app.use('/api/api-docs', swaggerUI.serve, swaggerUI.setup(specs));
 
 app.use(express.json());
 
@@ -10,7 +27,7 @@ const products = JSON.parse(fs.readFileSync('./data.json', 'utf8'));
 
 const productSchema = Joi.object({
     productNumber: Joi.number().integer().valid(...products.map(p => p.productNumber)),
-    productName: Joi.string().required().valid(...products.map(p => p.productName)),
+    productName: Joi.string().required(),
     productOwner: Joi.string().required(),
     developers: Joi.array().items(Joi.string()).max(5).unique().required(),
     scrumMaster: Joi.string().required(),
@@ -27,7 +44,79 @@ function filterBy(req, res, products, queryParam, propName) {
         res.send(product);
     }
 }
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Product:
+ *       type: object
+ *       properties:
+ *         productNumber:
+ *           type: integer
+ *           example: 1
+ *         productName:
+ *           type: string
+ *           example: "Product 1"
+ *         productOwner:
+ *           type: string
+ *           example: "John Doe"
+ *         developers:
+ *           type: array
+ *           items:
+ *             type: string
+ *           example: ["Jane Doe", "Bob Smith"]
+ *         scrumMaster:
+ *           type: string
+ *           example: "Alice Johnson"
+ *         startDate:
+ *           type: string
+ *           format: date-time
+ *           example: "2023-03-26T13:00:00.000Z"
+ *         methodology:
+ *           type: string
+ *           example: "Agile"
+ */
 
+/**
+ * @swagger
+ * /api/products:
+ *   get:
+ *     summary: Get a list of products
+ *     parameters:
+ *       - in: query
+ *         name: productOwner
+ *         description: Filter by product owner
+ *         required: false
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: developerName
+ *         description: Filter by developer name
+ *         required: false
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: scrumMaster
+ *         description: Filter by scrum master
+ *         required: false
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: methodology
+ *         description: Filter by methodology
+ *         required: false
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: A list of products
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Product'
+ */
 app.get('/api/products', (req, res) => {
     // res.send(products);
     if (req.query.productOwner) {
@@ -43,6 +132,60 @@ app.get('/api/products', (req, res) => {
     }
 });
 
+/**
+ * @swagger
+ * /api/product/{productNumber}:
+ *   get:
+ *     summary: Get a product by product number
+ *     parameters:
+ *       - in: path
+ *         name: productNumber
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: Numeric ID of the product to retrieve
+ *     responses:
+ *       '200':
+ *         description: A product object
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 productNumber:
+ *                   type: integer
+ *                   description: The unique identifier for the product
+ *                   example: 12345
+ *                 productName:
+ *                   type: string
+ *                   description: The name of the product
+ *                   example: "Example Product"
+ *                 productOwner:
+ *                   type: string
+ *                   description: The name of the product owner
+ *                   example: "John Doe"
+ *                 developers:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                   description: The list of developers working on the product
+ *                   example: ["Alice", "Bob"]
+ *                 scrumMaster:
+ *                   type: string
+ *                   description: The name of the scrum master for the product
+ *                   example: "Jane Doe"
+ *                 startDate:
+ *                   type: string
+ *                   format: date-time
+ *                   description: The start date of the product development
+ *                   example: "2022-01-01T00:00:00.000Z"
+ *                 methodology:
+ *                   type: string
+ *                   description: The development methodology used for the product
+ *                   example: "Agile"
+ *       '404':
+ *         description: Product not found
+ */
 app.get('/api/product/:productNumber', (req, res) => {
     const products = JSON.parse(fs.readFileSync('./data.json', 'utf8'));
     const product = products.find(p => p.productNumber === parseInt(req.params.productNumber));
@@ -50,6 +193,49 @@ app.get('/api/product/:productNumber', (req, res) => {
     res.send(product);
 });
 
+/**
+ * @swagger
+ * /api/product:
+ *   post:
+ *     summary: Create a new product
+ *     description: Add a new product to the system
+ *     tags:
+ *       - Products
+ *     requestBody:
+ *       description: Product object that needs to be added
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             $ref: '#/components/schemas/Product'
+ *           example:
+ *             productName: "Product 41"
+ *             productOwner: "John Doe"
+ *             developers: ["Jane Doe", "Bob Smith"]
+ *             scrumMaster: "Mary Johnson"
+ *             startDate: "2023-03-26T10:00:00.000Z"
+ *             methodology: "Agile"
+ *     responses:
+ *       '200':
+ *         description: Product successfully created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Product'
+ *             example:
+ *               productNumber: 41
+ *               productName: "Product 41"
+ *               productOwner: "John Doe"
+ *               developers: ["Jane Doe", "Bob Smith"]
+ *               scrumMaster: "Mary Johnson"
+ *               startDate: "2023-03-26T10:00:00.000Z"
+ *               methodology: "Agile"
+ *       '400':
+ *         description: Bad request. Invalid request body or product name already exists.
+ *       '500':
+ *         description: Internal server error. Failed to write to data file.
+ */
 app.post('/api/product', (req, res) => {
     const { error } = productSchema.validate(req.body);
     if (error) {
@@ -77,44 +263,5 @@ app.post('/api/product', (req, res) => {
     fs.writeFileSync('./data.json', JSON.stringify(products));
     res.send(product);
 });
-
-app.get('/', (req, res) => {
-    const products = [];
-
-    const owners = ["Alice", "Bob", "Charlie", "David", "Eve", "Frank", "Grace", "Henry", "Isabelle", "Jack"];
-    const developers = ["Adam", "Beth", "Cathy", "Dan", "Emily", "Fred", "Gina", "Harry", "Ivy", "Jake", "Kelly", "Luke", "Megan", "Nate", "Olivia", "Peter", "Quinn", "Rachel", "Steve", "Tina"];
-    const scrumMasters = ["Amy", "Ben", "Chloe", "Derek", "Emma", "Fiona", "Glen", "Haley", "Ian", "Jenna"];
-
-    for (let i = 1; i <= 40; i++) {
-        const ownerName = owners[Math.floor(Math.random() * owners.length)];
-        const scrumMasterName = scrumMasters[Math.floor(Math.random() * scrumMasters.length)];
-        const numDevelopers = Math.floor(Math.random() * 5) + 1;
-        const developerNames = [];
-        for (let j = 0; j < numDevelopers; j++) {
-            const developerName = developers[Math.floor(Math.random() * developers.length)];
-            developerNames.push(developerName);
-        }
-        const methodology = Math.random() < 0.5 ? "Agile" : "Waterfall";
-        const startDate = new Date();
-
-        const product = {
-            productNumber: i,
-            productName: `Product ${i}`,
-            productOwner: ownerName,
-            developers: developerNames,
-            scrumMaster: scrumMasterName,
-            startDate: startDate,
-            methodology: methodology,
-            // organization: "BC Ministry of Citizen Services",
-            // department: "Information Management Branch"
-        };
-
-        products.push(product);
-    }
-
-    console.log(products);
-    res.send(products);
-});
-
 
 app.listen(port, () => console.log(`Example app listening on port ${port}!`));
