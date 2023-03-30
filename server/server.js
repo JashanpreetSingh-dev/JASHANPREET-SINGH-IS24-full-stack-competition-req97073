@@ -1,10 +1,11 @@
 const express = require('express');
 const app = express();
-const port = 3000;
+const port = 3001;
 const Joi = require('joi');
 const fs = require('fs');
 const swaggerJSDoc = require('swagger-jsdoc');
 const swaggerUI = require('swagger-ui-express');
+const cors = require('cors');
 
 const options = {
     definition: {
@@ -23,6 +24,7 @@ const specs = swaggerJSDoc(options);
 app.use('/api/api-docs', swaggerUI.serve, swaggerUI.setup(specs));
 
 app.use(express.json());
+app.use(cors());
 
 const products = JSON.parse(fs.readFileSync('./data.json', 'utf8'));
 
@@ -254,7 +256,7 @@ app.post('/api/product', (req, res) => {
         productOwner: req.body.productOwner,
         developers: req.body.developers,
         scrumMaster: req.body.scrumMaster,
-        startDate: new Date(),
+        startDate: req.body.startDate,
         methodology: req.body.methodology
     };
     products.push(product);
@@ -333,5 +335,6 @@ app.put('/api/product/:productNumber', (req, res) => {
     fs.writeFileSync('./data.json', JSON.stringify(products));
     res.send(product);
 });
+
 
 app.listen(port, () => console.log(`Example app listening on port ${port}!`));
