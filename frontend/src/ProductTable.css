@@ -1,0 +1,15 @@
+.ant-table-row:hover .edit-button{
+    display: inline-block;
+}
+
+.ant-table-row:hover .delete-button{
+    display: inline-block;
+}
+
+.edit-button{
+    display: none;
+}
+
+.delete-button{
+    display: none;
+}
