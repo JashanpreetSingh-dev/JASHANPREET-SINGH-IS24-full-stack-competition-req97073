@@ -5,10 +5,12 @@ import axios from "axios";
 import moment from "moment";
 import { Link } from "react-router-dom";
 
+// The API Component's URL is defined here
 const URL = "http://localhost:3000/api/product";
 
 const NewProductForm = () => {
 
+    // This is the state of the form
     const [productName, setProductName] = useState("");
     const [productOwner, setProductOwner] = useState("");
     const [developers, setDevelopers] = useState([]);
@@ -18,22 +20,24 @@ const NewProductForm = () => {
     const [formAction, setFormAction] = useState("add");
     const [form] = Form.useForm();
 
+    // Use effect hook to get the product details if the user is editing a product so that the form is pre-filled with the product details
     useEffect(() => {
-        console.log(window.location.href);
-        console.log(window.location.pathname);
+        // Check if the user is editing a product
         if (window.location.pathname.includes("/editProduct/")) {
             setFormAction("edit");
             const productId = window.location.pathname.split("/")[2];
-            console.log(productId);
+
+            // Get the product details from the backend
             axios.get(URL + "/" + productId).then((response) => {
                 if (response.status === 200) {
-                    console.log(response.data);
                     setProductName(response.data.productName);
                     setProductOwner(response.data.productOwner);
                     setDevelopers(response.data.developers);
                     setScrumMaster(response.data.scrumMaster);
                     setStartDate(response.data.startDate);
                     setMethodology(response.data.methodology);
+
+                    // Set the form fields with the product details
                     form.setFieldsValue({
                         productName: response.data.productName,
                         productOwner: response.data.productOwner,
@@ -49,11 +53,15 @@ const NewProductForm = () => {
         }
     }, [])
 
+    // This function is called when the user changes the developers field. This is a helper function to split the developers string into an array of developers
     const handleDevelopersChange = (e) => {
+        // Split the developers string into an array of developers
         const developersList = e.target.value.split(",").map(developer => developer.trim());
+        // Set the developers state
         setDevelopers(developersList);
     };
 
+    // This function is used to reset the form fields to their initial state which is empty
     const resetForm = () => {
         setProductName("");
         setProductOwner("");
@@ -64,8 +72,14 @@ const NewProductForm = () => {
         form.resetFields();
     }
 
+    // This function is called when the user clicks on the submit button. This function is used to add a new product to the database
+    // Axios is used to make a POST request to the backend to add a new product
+    // The response from the backend is checked to see if the product was added successfully or not
+    // If the product was added successfully, the user is asked if they want to go back to the home page or stay on the same page
+    // If the product was not added successfully, the user is alerted that the product already exists or some other error occurred
     const handleFormSubmit = async (values) => {
 
+        // Make a POST request to the backend to add a new product
         axios.post(URL, {
             productName,
             productOwner,
@@ -74,6 +88,7 @@ const NewProductForm = () => {
             startDate,
             methodology
         }).then((response) => {
+            // Check if the product was added successfully
             if (response.status === 200) {
                 const confirmation = window.confirm("Product added successfully\nClick OK to go back to the home page, or click Cancel to stay on the same page")
                 if (confirmation) {
@@ -92,8 +107,16 @@ const NewProductForm = () => {
         });
     };
 
+    // This function is called when the user clicks on the submit button. This function is used to edit a product in the database
+    // Axios is used to make a PUT request to the backend to edit a product
+    // The response from the backend is checked to see if the product was edited successfully or not
+    // If the product was edited successfully, the user is asked if they want to go back to the home page or stay on the same page
+    // If the product was not edited successfully, the user is alerted that the product already exists or some other error occurred
     const handleEditFormSubmit = async (values) => {
+        // Getting the product id from the URL
         const productId = window.location.pathname.split("/")[2];
+
+        // Make a PUT request to the backend to edit a product
         axios.put(URL + "/" + productId, {
             productName,
             productOwner,
@@ -113,24 +136,26 @@ const NewProductForm = () => {
             console.log(response.statusText);
         }).catch((error) => {
             console.log(error);
-            const errorResponse = "Something wrong with the Schema, please check if more than 5 developers are added\n" + error.response.data; 
+            const errorResponse = "Something wrong with the Schema, please check if more than 5 developers are added\n" + error.response.data;
             alert(errorResponse);
         });
     }
 
+    // The component returns a form which is used to add a new product or edit an existing product
     return (
         <>
             <div className="goBackButton">
-                <Button type="primary" style={{ 
+                <Button type="primary" style={{
                     margin: "10px",
                     backgroundColor: "#d6691c",
                     color: "#000",
                     border: "none",
                     borderRadius: "5px",
-                    }}>
+                }}>
                     <Link to="/">Go Back</Link>
                 </Button>
             </div>
+
             <h1 style={{
                 textAlign: "center",
                 margin: "auto",
@@ -141,6 +166,7 @@ const NewProductForm = () => {
             }}>
                 {formAction === "edit" ? "Edit Product" : "Add a new Product"}
             </h1>
+
             <Form
                 layout="horizontal"
                 name="newProductForm"
@@ -154,8 +180,6 @@ const NewProductForm = () => {
                     alignItems: "center",
                 }}
                 form={form}
-                // key={productName + productOwner + developers + scrumMaster + startDate + methodology}
-
             >
                 <Form.Item label="Product Name" name="productName" rules={[{ required: true, message: 'Please input product name' }]}>
                     <Input value={productName} onChange={

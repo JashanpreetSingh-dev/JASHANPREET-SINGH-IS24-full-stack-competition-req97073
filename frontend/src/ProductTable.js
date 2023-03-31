@@ -6,28 +6,48 @@ import { Link } from "react-router-dom";
 import { SearchOutlined } from "@ant-design/icons";
 import Highlighter from "react-highlight-words";
 
-
+// The API Component's URL is defined here
 const URL = "http://localhost:3000/api/products";
 
 
-
 const ProductTable = () => {
+
+    // The state of the component is defined here
+
+    // The products state stores the products that are fetched from the API
     const [products, setProducts] = useState([]);
+
+    // The developers state stores the developers that are parsed from the products
     const [developers, setDevelopers] = useState([]);
 
+    // The searchText state stores the text that is searched for in the table
     const [searchText, setSearchText] = useState("");
+
+    // The searchedColumn state stores the column that is searched for in the table
     const [searchedColumn, setSearchedColumn] = useState("");
+
+    // The connectionError state stores whether or not there is a connection error
     const [connectionError, setConnectionError] = useState(false);
+
     const searchInput = useRef(null);
+
+    // This is a helper function that is used to search for text in the table
+    // Reference: https://ant.design/components/table/#components-table-demo-head
     const handleSearch = (selectedKeys, confirm, dataIndex) => {
         confirm();
         setSearchText(selectedKeys[0]);
         setSearchedColumn(dataIndex);
     };
+
+    // This is a helper function that is used to reset the search in the table
+    // Reference: https://ant.design/components/table/#components-table-demo-head
     const handleReset = (clearFilters) => {
         clearFilters();
         setSearchText("");
     };
+
+    // This is a helper function that is used to search for text in the table
+    // Reference: https://ant.design/components/table/#components-table-demo-head
     const getColumnSearchProps = (dataIndex) => ({
         filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters, close }) => (
             <div style={{
@@ -90,15 +110,8 @@ const ProductTable = () => {
                 text
             )
     });
-    const getDeveloperSet = () => {
-        let developerSet = [];
-        products.forEach((product) => {
-            developerSet.concat(...product.developers)
-        });
 
-        return new Set(developerSet);
-    }
-
+    // The columns is a list of objects that define the columns of the table.
     const columns = [
         {
             title: "Product Number",
@@ -147,8 +160,6 @@ const ProductTable = () => {
             }),
             onFilter: (value, record) => record.developers.includes(value),
             filterSearch: true,
-
-            // ...getColumnSearchProps("developers"),
         },
         {
             title: "Scrum Master",
@@ -190,7 +201,6 @@ const ProductTable = () => {
                     </Tag>
                 );
             },
-            // ...getColumnSearchProps("methodology"),
         },
         {
             title: "Actions (Edit)",
@@ -224,17 +234,27 @@ const ProductTable = () => {
         }
     ];
 
-
-
-
+    // UseEffect is used to fetch the data from the API.
+    // The data is then stored in the products state.
+    // The developers state is used to store the developers of the products.
     useEffect(() => {
         async function getProducts() {
+
+            // Gettting the data from the API.
             axios.get(URL)
                 .then((response) => {
+
+                    // Setting the connection error to false.
                     setConnectionError(false);
+
+                    // Setting the products state to the data from the API.
                     setProducts(response.data);
                     const data = response.data;
                     const developers = [];
+
+                    // Setting the key of the data to the product number. PS: This is needed for the table to work.
+                    // Ref: https://ant.design/components/table/#components-table-demo-edit-row
+                    // Setting the developers state to the developers of the products.
                     data.forEach((product) => {
                         product.key = product.productNumber;
                         product.developers.forEach((developer) => {
@@ -242,12 +262,8 @@ const ProductTable = () => {
                                 developers.push(developer);
                             }
                         });
-                        // return product;
                     });
                     setDevelopers(developers);
-                    console.log("-----------------DEVELOPERS-----------------");
-                    console.log(developers);
-                    console.log(data);
                 })
                 .catch((error) => {
                     console.log(error);
@@ -256,28 +272,6 @@ const ProductTable = () => {
                 });
         }
         getProducts();
-        //  axios.get(URL)
-        //     .then((response) => {
-        //         setProducts(response.data);
-        //         const data = response.data;
-        //         data.forEach((product) => {
-        //             product.key = product.productNumber;
-        //             return product;
-        //         });
-        //         // setDevelopers(getDeveloperSet(products));
-        //         // console.log("-----------------DEVELOPERS-----------------");
-        //         // console.log(developers);
-        //         // console.log(data);
-        //     })
-        //     .then(() => {
-        //         setDevelopers(getDeveloperSet(products));
-        //         console.log("-----------------DEVELOPERS-----------------");
-        //         console.log(developers);
-        //     })
-        //     .catch((error) => {
-        //         console.log(error);
-        //     });
-        // console.log(products);
     }, []);
 
     return (
