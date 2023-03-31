@@ -59,8 +59,9 @@ Then, from the root directory of the repository, run the following command:
 ```
 npm run dev
 ```
+PS: You would still need to do npm install for frontend and server folders seperately to get the node modules. but instead of running npm start twice. You could just run **`npm run dev`** in the root folder<br>
 
-`If there is a problem in running them together, you might be missing the concurrently package`: 
+If there is a problem in running them together, you might be missing the concurrently package: 
 
 ```
 npm install -g concurrently
