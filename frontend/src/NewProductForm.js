@@ -1,7 +1,9 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Button, DatePicker, Form, Input, Radio } from 'antd';
 import { useState } from "react";
 import axios from "axios";
+import moment from "moment";
+import { Link } from "react-router-dom";
 
 const URL = "http://localhost:3001/api/product";
 
@@ -13,7 +15,48 @@ const NewProductForm = () => {
     const [scrumMaster, setScrumMaster] = useState("");
     const [startDate, setStartDate] = useState("");
     const [methodology, setMethodology] = useState("Agile");
+    const [formAction, setFormAction] = useState("add");
     const [form] = Form.useForm();
+
+    useEffect(() => {
+        console.log(window.location.href);
+        console.log(window.location.pathname);
+        if (window.location.pathname.includes("/editProduct/")) {
+            setFormAction("edit");
+            const productId = window.location.pathname.split("/")[2];
+            console.log(productId);
+            axios.get(URL + "/" + productId).then((response) => {
+                if (response.status === 200) {
+                    console.log(response.data);
+                    setProductName(response.data.productName);
+                    setProductOwner(response.data.productOwner);
+                    setDevelopers(response.data.developers);
+                    setScrumMaster(response.data.scrumMaster);
+                    setStartDate(response.data.startDate);
+                    setMethodology(response.data.methodology);
+                    // setProductName("")
+                    // setProductOwner("")
+                    // setDevelopers([])
+                    // setScrumMaster("")
+                    // setStartDate("")
+                    // setMethodology("Agile")
+
+
+                    // Set the form values
+                    form.setFieldsValue({
+                        productName: response.data.productName,
+                        productOwner: response.data.productOwner,
+                        developers: response.data.developers.join(", "),
+                        scrumMaster: response.data.scrumMaster,
+                        startDate: moment(response.data.startDate, "YYYY-MM-DD"),
+                        methodology: response.data.methodology,
+                    });
+                }
+            }).catch((error) => {
+                console.log(error);
+            });
+        }
+    }, [])
 
     const handleDevelopersChange = (e) => {
         const developersList = e.target.value.split(",").map(developer => developer.trim());
@@ -52,35 +95,45 @@ const NewProductForm = () => {
             alert("Product with the same name already exists");
             resetForm();
         });
-
-        // try {
-        //     const response = await axios.post(URL, {
-        //         productName,
-        //         productOwner,
-        //         developers,
-        //         scrumMaster,
-        //         startDate,
-        //         methodology
-        //     });
-        //     if (response.status === 200) {
-        //         alert("Product created successfully");
-        //         setProductName("");
-        //         setProductOwner("");
-        //         setDevelopers([]);
-        //         setScrumMaster("");
-        //         setStartDate("");
-        //         setMethodology("Agile");
-        //     } else if (response.status === 400) {
-        //         alert("Product already exists");
-        //     }
-        //     console.log(response);
-        // } catch (error) {
-        //     console.error(error);
-        // }
     };
+
+    const handleEditFormSubmit = async (values) => {
+        const productId = window.location.pathname.split("/")[2];
+        axios.put(URL + "/" + productId, {
+            productName,
+            productOwner,
+            developers,
+            scrumMaster,
+            startDate,
+            methodology
+        }).then((response) => {
+            if (response.status === 200) {
+                alert("Product updated successfully");
+                resetForm();
+            } else if (response.status === 400) {
+                alert("Product already exists");
+            }
+            console.log(response.statusText);
+        }).catch((error) => {
+            console.log(error);
+            alert("Product with the same name already exists");
+            resetForm();
+        });
+    }
 
     return (
         <>
+            <div className="goBackButton">
+                <Button type="primary" style={{ 
+                    margin: "10px",
+                    backgroundColor: "#d6691c",
+                    color: "#000",
+                    border: "none",
+                    borderRadius: "5px",
+                    }}>
+                    <Link to="/">Go Back</Link>
+                </Button>
+            </div>
             <h1 style={{
                 textAlign: "center",
                 margin: "auto",
@@ -88,12 +141,14 @@ const NewProductForm = () => {
                 justifyContent: "center",
                 alignItems: "center",
                 fontFamily: "sans-serif",
-            }}>Add new product</h1>
+            }}>
+                {formAction === "edit" ? "Edit Product" : "Add a new Product"}
+            </h1>
             <Form
                 layout="horizontal"
                 name="newProductForm"
                 initialValues={{ methodology: "Agile" }}
-                onFinish={handleFormSubmit}
+                onFinish={formAction === "edit" ? handleEditFormSubmit : handleFormSubmit}
                 labelCol={{ span: 6 }}
                 wrapperCol={{ span: 14 }}
                 style={{
@@ -102,7 +157,7 @@ const NewProductForm = () => {
                     alignItems: "center",
                 }}
                 form={form}
-                key={productName + productOwner + developers + scrumMaster + startDate + methodology}
+                // key={productName + productOwner + developers + scrumMaster + startDate + methodology}
 
             >
                 <Form.Item label="Product Name" name="productName" rules={[{ required: true, message: 'Please input product name' }]}>
@@ -118,13 +173,13 @@ const NewProductForm = () => {
                         (e) => {
                             setProductOwner(e.target.value);
                         }
-                    }/>
+                    } />
                 </Form.Item>
 
                 <Form.Item label="Developers" name="developers" rules={[{ required: true, message: 'Please input developers' }]}>
                     <Input value={developers.join(", ")} onChange={
-                            handleDevelopersChange
-                    }/>
+                        handleDevelopersChange
+                    } />
                 </Form.Item>
 
                 <Form.Item label="Scrum Master" name="scrumMaster" rules={[{ required: true, message: 'Please input scrum master' }]}>
@@ -132,15 +187,15 @@ const NewProductForm = () => {
                         (e) => {
                             setScrumMaster(e.target.value);
                         }
-                    }/>
+                    } />
                 </Form.Item>
 
                 <Form.Item label="Start Date" name="startDate" rules={[{ required: true, message: 'Please input start date' }]}>
-                    <DatePicker value={startDate} onChange={
+                    <DatePicker value={moment(startDate, "YYYY-MM-DD")} onChange={
                         (date) => {
                             setStartDate(date.format("YYYY-MM-DD"));
                         }
-                    }/>
+                    } />
                 </Form.Item>
 
                 <Form.Item label="Methodology" name="methodology" rules={[{ required: true, message: 'Please input methodology' }]}>
@@ -154,9 +209,14 @@ const NewProductForm = () => {
                     </Radio.Group>
                 </Form.Item>
 
-                <Form.Item>
+                <Form.Item style={{
+                    textAlign: "center",
+                    marginTop: "50px",
+                }}>
                     <Button type="primary" htmlType="submit">
-                        Submit
+                        {
+                            formAction === "edit" ? "Edit Product" : "Add Product"
+                        }
                     </Button>
                 </Form.Item>
             </Form>
