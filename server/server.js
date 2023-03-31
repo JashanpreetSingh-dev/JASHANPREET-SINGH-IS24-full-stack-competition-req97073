@@ -7,6 +7,7 @@ const swaggerJSDoc = require('swagger-jsdoc');
 const swaggerUI = require('swagger-ui-express');
 const cors = require('cors');
 
+// Swagger setup
 const options = {
     definition: {
         openapi: '3.0.0',
@@ -19,15 +20,19 @@ const options = {
     apis: ['./server.js'],
 }
 
+// Initialize swagger-jsdoc -> returns validated swagger spec in json format
 const specs = swaggerJSDoc(options);
 
 app.use('/api/api-docs', swaggerUI.serve, swaggerUI.setup(specs));
 
+// Middleware
 app.use(express.json());
 app.use(cors());
 
+// Parse JSON file
 const products = JSON.parse(fs.readFileSync('./data.json', 'utf8'));
 
+// Setting up the schema for validation
 const productSchema = Joi.object({
     productNumber: Joi.number().integer().valid(...products.map(p => p.productNumber)),
     productName: Joi.string().required(),
@@ -38,6 +43,7 @@ const productSchema = Joi.object({
     methodology: Joi.string().valid("Agile", "Waterfall").required(),
 });
 
+// Helper function to filter by query parameters
 function filterBy(req, res, products, queryParam, propName) {
     let product = {}
     if ( propName !== "developers"){
@@ -142,7 +148,6 @@ function filterBy(req, res, products, queryParam, propName) {
  *         description: Internal server error. Failed to read from data file.
  */
 app.get('/api/products', (req, res) => {
-    // res.send(products);
     if (req.query.productOwner) {
         filterBy(req, res, products, "productOwner", "productOwner");
     } else if (req.query.developerName) {
