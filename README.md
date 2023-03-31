@@ -89,8 +89,10 @@ Retrieves a list of products from the API with optional filters.
     - **Code**: `404 Not Found`
     - **Content**: Error message indicating that no products were found.
 
-```    
+```http
 GET /api/products?productOwner=John%20Doe
+Content-Type: application/json
+
 
 [
     {
@@ -132,6 +134,7 @@ Retrieves a product from the API using the product number.
 
 ```http
 GET /api/product/123
+Content-Type: application/json
 
 {
     "productNumber": 123,
@@ -167,7 +170,7 @@ Creates a new product and adds it to the API.
     - **Content**: Error message indicating that the request body did not pass validation.
 - **Example Request**
 
-```
+```http
 POST /api/product
 Content-Type: application/json
 {
@@ -181,7 +184,7 @@ Content-Type: application/json
 ```
 
 - **Example Response**
-```
+```http
 HTTP/1.1 200 OK
 Content-Type: application/json
 
@@ -219,8 +222,9 @@ Updates an existing product in the API with the specified product number.
     - **Code**: `400 Bad Request`
     - **Content**: Error message indicating that the request body was invalid.
 - **Example Request**:
-```
+```http
 PUT /api/product/123
+Content-Type: application/json
 
 {
     "productName": "New Product Name",
@@ -233,8 +237,10 @@ PUT /api/product/123
 ```
 
 - **Example Response**
-```
-200 OK
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
 
 {
     "productNumber": 123,
