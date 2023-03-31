@@ -1,6 +1,6 @@
 const express = require('express');
 const app = express();
-const port = 3001;
+const port = 3000;
 const Joi = require('joi');
 const fs = require('fs');
 const swaggerJSDoc = require('swagger-jsdoc');
@@ -39,7 +39,12 @@ const productSchema = Joi.object({
 });
 
 function filterBy(req, res, products, queryParam, propName) {
-    const product = products.filter(p => p[propName] === req.query[queryParam]);
+    let product = {}
+    if ( propName !== "developers"){
+        product = products.filter(p => p[propName] === req.query[queryParam]);
+    } else {
+        product = products.filter(p => p[propName].includes(req.query[queryParam]));
+    }
     if (product.length === 0) {
         res.status(404).send('The product with the given ' + queryParam + ' was not found.');
     } else {
@@ -239,7 +244,7 @@ app.get('/api/product/:productNumber', (req, res) => {
 app.post('/api/product', (req, res) => {
     const { error } = productSchema.validate(req.body);
     if (error) {
-        res.status(400).send(error.details[0].message);
+        res.status(404).send(error.details[0].message);
         return;
     }
 

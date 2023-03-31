@@ -5,7 +5,7 @@ import axios from "axios";
 import moment from "moment";
 import { Link } from "react-router-dom";
 
-const URL = "http://localhost:3001/api/product";
+const URL = "http://localhost:3000/api/product";
 
 const NewProductForm = () => {
 
@@ -34,15 +34,6 @@ const NewProductForm = () => {
                     setScrumMaster(response.data.scrumMaster);
                     setStartDate(response.data.startDate);
                     setMethodology(response.data.methodology);
-                    // setProductName("")
-                    // setProductOwner("")
-                    // setDevelopers([])
-                    // setScrumMaster("")
-                    // setStartDate("")
-                    // setMethodology("Agile")
-
-
-                    // Set the form values
                     form.setFieldsValue({
                         productName: response.data.productName,
                         productOwner: response.data.productOwner,
@@ -84,8 +75,12 @@ const NewProductForm = () => {
             methodology
         }).then((response) => {
             if (response.status === 200) {
-                alert("Product created successfully");
-                resetForm();
+                const confirmation = window.confirm("Product added successfully\nClick OK to go back to the home page, or click Cancel to stay on the same page")
+                if (confirmation) {
+                    window.location.href = "/";
+                } else {
+                    resetForm();
+                }
             } else if (response.status === 400) {
                 alert("Product already exists");
             }
@@ -108,16 +103,18 @@ const NewProductForm = () => {
             methodology
         }).then((response) => {
             if (response.status === 200) {
-                alert("Product updated successfully");
-                resetForm();
+                let confirmation = window.confirm("Product updated successfully\nClick OK to go back to the home page, or click Cancel to stay on the same page")
+                if (confirmation) {
+                    window.location.href = "/";
+                }
             } else if (response.status === 400) {
                 alert("Product already exists");
             }
             console.log(response.statusText);
         }).catch((error) => {
             console.log(error);
-            alert("Product with the same name already exists");
-            resetForm();
+            const errorResponse = "Something wrong with the Schema, please check if more than 5 developers are added\n" + error.response.data; 
+            alert(errorResponse);
         });
     }
 
